@@ -1,0 +1,17 @@
+<resources>
+
+    <string name="app_name">メモ帳</string>
+    <string name="menu_settings">Settings</string>
+    <string name="title_activity_memopad">メモ帳</string>
+    <string name="memodb_empty">メモが見つかりません</string>
+    <string name="menu_save">保存</string>
+    <string name="menu_open">開く</string>
+    <string name="menu_new">新規作成</string>
+	<string name="memodb_delete">削除</string>
+	<string name="memodb_confirm_delete">メモを削除します。よろしいですか</string>
+	<string name="button_ok">OK</string>
+	<string name="button_cancel">キャンセル</string>
+	<string name="button_search">検索</string>
+	<string name="hint_search">検索する文字列を入力します</string>
+
+</resources>
