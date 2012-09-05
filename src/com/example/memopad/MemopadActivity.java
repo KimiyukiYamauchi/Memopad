@@ -1,5 +1,9 @@
 package com.example.memopad;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.util.Date;
 
@@ -9,6 +13,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.os.Environment;
 import android.text.Editable;
 import android.text.Selection;
 import android.text.TextWatcher;
@@ -17,10 +22,15 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.EditText;
+import android.widget.Toast;
 
 public class MemopadActivity extends Activity {
 
 	boolean memoChanged = false;
+	String fn;
+	String encode = "SHIFT-JIS";
+
+	// Intent i;
 
 	@Override
 	protected void onStop() {
@@ -80,18 +90,36 @@ public class MemopadActivity extends Activity {
 		switch (item.getItemId()) {
 
 		case R.id.menu_save:
+			// debug Log.d(ACTIVITY_SERVICE, "R.id.menu_save");
 			saveMemo();
 			break;
 		case R.id.menu_open:
+			// debug Log.d(ACTIVITY_SERVICE, "R.id.menu_open");
 			if (memoChanged)
 				saveMemo();
 			Intent i = new Intent(this, MemoList.class);
 			startActivityForResult(i, 0);
 			break;
 		case R.id.menu_new:
+			// debug Log.d(ACTIVITY_SERVICE, "R.id.menu_new");
 			if (memoChanged)
 				saveMemo();
 			et.setText("");
+			break;
+		case R.id.menu_import:
+			// debug Log.d(ACTIVITY_SERVICE, "R.id.menu_import");
+			if (Environment.MEDIA_MOUNTED.equals(Environment
+					.getExternalStorageState())) {
+				Log.d(ACTIVITY_SERVICE, "StorageState() OK");
+				if (memoChanged)
+					saveMemo();
+				memoChanged = false;
+				i = new Intent(this, FilePicker.class);
+				startActivityForResult(i, 1);
+			} else {
+				Toast toast = Toast.makeText(this,
+						R.string.toast_no_external_storage, 1000);
+			}
 			break;
 
 		}
@@ -110,6 +138,13 @@ public class MemopadActivity extends Activity {
 				Log.v(ACTIVITY_SERVICE, data.getStringExtra("text"));
 				et.setText(data.getStringExtra("text"));
 				memoChanged = false;
+				break;
+			case 1:
+				fn = data.getStringExtra("fn");
+				if (fn.length() > 0) {
+					et.setText(readFile());
+					memoChanged = false;
+				}
 				break;
 			}
 
@@ -138,5 +173,27 @@ public class MemopadActivity extends Activity {
 			memos.close();
 			memoChanged = false;
 		}
+	}
+
+	String readFile() {
+		String str = "";
+		String l = null;
+
+		if (fn != null) {
+			BufferedReader br = null;
+			try {
+				br = new BufferedReader(new InputStreamReader(
+						new FileInputStream(fn), encode));
+				do {
+					l = br.readLine();
+					if (l != null)
+						str = str + l + "\n";
+				} while (l != null);
+				br.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return str;
 	}
 }
