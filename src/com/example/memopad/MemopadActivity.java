@@ -107,7 +107,7 @@ public class MemopadActivity extends Activity {
 			et.setText("");
 			break;
 		case R.id.menu_import:
-			// debug Log.d(ACTIVITY_SERVICE, "R.id.menu_import");
+			Log.d(ACTIVITY_SERVICE, "R.id.menu_import");
 			if (Environment.MEDIA_MOUNTED.equals(Environment
 					.getExternalStorageState())) {
 				Log.d(ACTIVITY_SERVICE, "StorageState() OK");
@@ -117,8 +117,10 @@ public class MemopadActivity extends Activity {
 				i = new Intent(this, FilePicker.class);
 				startActivityForResult(i, 1);
 			} else {
+				Log.d(ACTIVITY_SERVICE, "Toast!!!");
 				Toast toast = Toast.makeText(this,
 						R.string.toast_no_external_storage, 1000);
+				toast.show();
 			}
 			break;
 
