@@ -5,6 +5,11 @@
     <item android:id="@+id/menu_new" android:title="@string/menu_new" android:icon="@android:drawable/ic_menu_add"></item>
     <item android:id="@+id/menu_import" android:title="@string/menu_import"></item>
     <item android:id="@+id/menu_export" android:title="@string/menu_export"></item>
+    <item android:id="@+id/menu_encode" android:title="@string/menu_encode">
+        <menu>
+            <item android:id="@+id/menu_sjis" android:title="@string/menu_sjis" android:checkable="true"/>
+        </menu>
+    </item>
     
 
 </menu>

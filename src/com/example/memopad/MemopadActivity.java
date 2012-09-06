@@ -16,6 +16,7 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.text.Editable;
@@ -48,6 +49,21 @@ public class MemopadActivity extends Activity {
 		memoChanged = pref.getBoolean("memoChanged", false);
 
 		fn = pref.getString("fn", "");
+		encode = pref.getString("encode", "SHIFT-JIS");
+
+		Intent i = getIntent();
+		Uri uri = i.getData();
+		String tempFn = "";
+		if (uri != null)
+			tempFn = i.getData().getPath();
+		if (tempFn.length() > 0) {
+			if (memoChanged)
+				saveMemo();
+			fn = tempFn;
+			et.setText(readFile());
+			memoChanged = false;
+		}
+
 		TextWatcher tw = new TextWatcher() {
 
 			@Override
@@ -80,6 +96,7 @@ public class MemopadActivity extends Activity {
 		editor.putInt("cursor", Selection.getSelectionStart(et.getText()));
 		editor.putBoolean("memoChanged", memoChanged);
 		editor.putString("fn", fn);
+		editor.putString("encode", encode);
 		editor.commit();
 	}
 
@@ -87,6 +104,8 @@ public class MemopadActivity extends Activity {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater mi = getMenuInflater();
 		mi.inflate(R.menu.menu, menu);
+		if (encode.equals("SHIFT-JIS"))
+			menu.findItem(R.id.menu_sjis).setChecked(true);
 		return super.onCreateOptionsMenu(menu);
 	}
 
@@ -142,6 +161,15 @@ public class MemopadActivity extends Activity {
 				Toast toast = Toast.makeText(this,
 						R.string.toast_no_external_storage, 1000);
 				toast.show();
+			}
+			break;
+		case R.id.menu_sjis:
+			if (item.isChecked()) {
+				item.setChecked(false);
+				encode = "UTF-8";
+			} else {
+				item.setChecked(true);
+				encode = "SHIFT-JIS";
 			}
 			break;
 
