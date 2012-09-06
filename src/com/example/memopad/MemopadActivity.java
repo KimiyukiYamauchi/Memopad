@@ -1,9 +1,13 @@
 package com.example.memopad;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.text.DateFormat;
 import java.util.Date;
 
@@ -33,19 +37,6 @@ public class MemopadActivity extends Activity {
 	// Intent i;
 
 	@Override
-	protected void onStop() {
-		super.onStop();
-
-		EditText et = (EditText) findViewById(R.id.editText1);
-		SharedPreferences pref = getSharedPreferences("MemoPrefs", MODE_PRIVATE);
-		SharedPreferences.Editor editor = pref.edit();
-		editor.putString("memo", et.getText().toString());
-		editor.putInt("cursor", Selection.getSelectionStart(et.getText()));
-		editor.putBoolean("memoChanged", memoChanged);
-		editor.commit();
-	}
-
-	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
@@ -56,6 +47,7 @@ public class MemopadActivity extends Activity {
 		et.setSelection(pref.getInt("cursor", 0));
 		memoChanged = pref.getBoolean("memoChanged", false);
 
+		fn = pref.getString("fn", "");
 		TextWatcher tw = new TextWatcher() {
 
 			@Override
@@ -78,6 +70,20 @@ public class MemopadActivity extends Activity {
 	}
 
 	@Override
+	protected void onStop() {
+		super.onStop();
+
+		EditText et = (EditText) findViewById(R.id.editText1);
+		SharedPreferences pref = getSharedPreferences("MemoPrefs", MODE_PRIVATE);
+		SharedPreferences.Editor editor = pref.edit();
+		editor.putString("memo", et.getText().toString());
+		editor.putInt("cursor", Selection.getSelectionStart(et.getText()));
+		editor.putBoolean("memoChanged", memoChanged);
+		editor.putString("fn", fn);
+		editor.commit();
+	}
+
+	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater mi = getMenuInflater();
 		mi.inflate(R.menu.menu, menu);
@@ -90,27 +96,28 @@ public class MemopadActivity extends Activity {
 		switch (item.getItemId()) {
 
 		case R.id.menu_save:
-			// debug Log.d(ACTIVITY_SERVICE, "R.id.menu_save");
+			// Log.d(ACTIVITY_SERVICE, "R.id.menu_save");
 			saveMemo();
 			break;
 		case R.id.menu_open:
-			// debug Log.d(ACTIVITY_SERVICE, "R.id.menu_open");
+			// Log.d(ACTIVITY_SERVICE, "R.id.menu_open");
 			if (memoChanged)
 				saveMemo();
 			Intent i = new Intent(this, MemoList.class);
 			startActivityForResult(i, 0);
 			break;
 		case R.id.menu_new:
-			// debug Log.d(ACTIVITY_SERVICE, "R.id.menu_new");
+			// Log.d(ACTIVITY_SERVICE, "R.id.menu_new");
 			if (memoChanged)
 				saveMemo();
 			et.setText("");
+			fn = "";
 			break;
 		case R.id.menu_import:
-			Log.d(ACTIVITY_SERVICE, "R.id.menu_import");
+			// Log.d(ACTIVITY_SERVICE, "R.id.menu_import");
 			if (Environment.MEDIA_MOUNTED.equals(Environment
 					.getExternalStorageState())) {
-				Log.d(ACTIVITY_SERVICE, "StorageState() OK");
+				// Log.d(ACTIVITY_SERVICE, "StorageState() OK");
 				if (memoChanged)
 					saveMemo();
 				memoChanged = false;
@@ -118,6 +125,20 @@ public class MemopadActivity extends Activity {
 				startActivityForResult(i, 1);
 			} else {
 				Log.d(ACTIVITY_SERVICE, "Toast!!!");
+				Toast toast = Toast.makeText(this,
+						R.string.toast_no_external_storage, 1000);
+				toast.show();
+			}
+			break;
+		case R.id.menu_export:
+			// Log.d(ACTIVITY_SERVICE, "R.id.menu_export");
+			if (Environment.MEDIA_MOUNTED.equals(Environment
+					.getExternalStorageState())) {
+				// Log.d(ACTIVITY_SERVICE,
+				// "R.id.menu_export StorageState() OK");
+				writeFile();
+				memoChanged = false;
+			} else {
 				Toast toast = Toast.makeText(this,
 						R.string.toast_no_external_storage, 1000);
 				toast.show();
@@ -137,9 +158,9 @@ public class MemopadActivity extends Activity {
 
 			switch (requestCode) {
 			case 0:
-				Log.v(ACTIVITY_SERVICE, data.getStringExtra("text"));
 				et.setText(data.getStringExtra("text"));
 				memoChanged = false;
+				fn = "";
 				break;
 			case 1:
 				fn = data.getStringExtra("fn");
@@ -197,5 +218,36 @@ public class MemopadActivity extends Activity {
 			}
 		}
 		return str;
+	}
+
+	void writeFile() {
+		// Log.d(ACTIVITY_SERVICE, "writeFile() Enter");
+		// Log.d(ACTIVITY_SERVICE, "fn = " + fn);
+		EditText et = (EditText) findViewById(R.id.editText1);
+		String memo = et.getText().toString();
+
+		if (fn.length() == 0) {
+			String dn = Environment.getExternalStorageDirectory() + "/text/";
+			fn = memo.replaceAll("\\\\|\\.|\\/|:|\\*|\\?|\"|<|>|\\n|\\|", " ")
+					.trim();
+			fn = dn + fn.substring(0, Math.min(fn.length(), 12)) + ".txt";
+			// Log.v(ACTIVITY_SERVICE, "fn = " + fn);
+			File dir = new File(dn);
+			if (!dir.exists())
+				dir.mkdir();
+
+		}
+
+		BufferedWriter bw1;
+		try {
+			bw1 = new BufferedWriter(new OutputStreamWriter(
+					new FileOutputStream(fn), encode));
+			bw1.write(memo.replace("\n", "\r\n"));
+			bw1.close();
+			Log.v(ACTIVITY_SERVICE, "writeFile() OK");
+		} catch (IOException e) {
+			// TODO 自動生成された catch ブロック
+			e.printStackTrace();
+		}
 	}
 }
